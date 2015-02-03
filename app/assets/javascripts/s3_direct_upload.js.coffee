@@ -137,8 +137,11 @@ $.fn.S3Uploader = (options) ->
       content.filepath       = $('<a />').attr('href', content.url)[0].pathname
     else # IE <= 9 retu      rn a null result object so we use the file object instead
       domain                 = $uploadForm.attr('action')
-      content.filepath       = $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
-      content.url            = domain + content.filepath + '/' + encodeURIComponent(file.name)
+      filepath               = $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
+      content.url            = domain + filepath + '/' + encodeURIComponent(file.name)
+      parser                 = document.createElement('a')
+      parser.href            = content.url
+      content.filepath       = '/' + parser.pathname
 
     content.filename         = file.name
     content.filesize         = file.size if 'size' of file
