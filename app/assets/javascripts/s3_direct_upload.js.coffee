@@ -20,7 +20,8 @@ $.fn.S3Uploader = (options) ->
     remove_completed_progress_bar: true
     remove_completed_uploads: true
     remove_failed_progress_bar: false
-    remove_failed_upload_template: false
+    remove_failed_uploads: false
+    failed_upload_class: "failed"
     progress_bar_target: null
     filename_target: null
     click_submit_target: null
@@ -126,7 +127,13 @@ $.fn.S3Uploader = (options) ->
         content = build_content_object $uploadForm, data.files[0], data.result
         content.error_thrown = data.errorThrown
 
-        data.context.remove() if data.context && settings.remove_failed_progress_bar # remove progress bar
+        if settings.allow_multiple_files
+          data.context.addClass(settings.failed_upload_class)
+          data.context.find(settings.progress_bar_target).remove() if data.context.find(settings.progress_bar_target) && settings.remove_failed_progress_bar # remove progress bar
+          data.context.remove() if data.context && settings.remove_failed_uploads # remove uploads
+        else
+          data.context.remove() if data.context && settings.remove_failed_progress_bar # remove progress bar
+
         $uploadForm.trigger("s3_upload_failed", [content])
 
       formData: (form) ->
