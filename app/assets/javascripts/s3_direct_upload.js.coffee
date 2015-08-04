@@ -18,10 +18,24 @@ $.fn.S3Uploader = (options) ->
     additional_data: null
     before_add: null
     remove_completed_progress_bar: true
+    remove_completed_uploads: true
     remove_failed_progress_bar: false
+    remove_failed_upload_template: false
     progress_bar_target: null
+    filename_target: null
     click_submit_target: null
     allow_multiple_files: true
+    upload_template: """
+    <div data-behaviour="s3-upload">
+      <div class="filename" data-behaviour="document-filename">
+      </div>
+      <div class="progress active" data-behaviour="document-progress">
+        <div class="bar">
+        </div>
+      </div>
+    </div>
+    """
+    upload_container: null
 
   $.extend settings, options
 
@@ -46,6 +60,14 @@ $.fn.S3Uploader = (options) ->
             $(data.context).appendTo(settings.progress_bar_target || $uploadForm)
           else if !settings.allow_multiple_files
             data.context = settings.progress_bar_target
+          else
+            $newUploadTemplate = $(settings.upload_template).clone()
+            $newUploadTemplate.attr("data-behaviour", "s3-upload")
+            $newUploadTemplate.attr("data-file-id", file.unique_id)
+            $newUploadTemplate.appendTo(settings.upload_container || $uploadForm)
+            if settings.filename_target
+              $newUploadTemplate.find(settings.filename_target).text(file.name)
+            data.context = $newUploadTemplate
           if settings.click_submit_target
             if settings.allow_multiple_files
               forms_for_submit.push data
@@ -90,7 +112,11 @@ $.fn.S3Uploader = (options) ->
               $uploadForm.trigger(event, [xhr, status, error])
               return event.result
 
-        data.context.remove() if data.context && settings.remove_completed_progress_bar # remove progress bar
+        if settings.allow_multiple_files
+          data.context.find(settings.progress_bar_target).remove() if data.context.find(settings.progress_bar_target) && settings.remove_completed_progress_bar # remove progress bar
+          data.context.remove() if data.context && settings.remove_completed_uploads # remove uploads
+        else
+          data.context.remove() if data.context && settings.remove_completed_progress_bar # remove progress bar
         $uploadForm.trigger("s3_upload_complete", [content])
 
         current_files.splice($.inArray(data, current_files), 1) # remove that element from the array
