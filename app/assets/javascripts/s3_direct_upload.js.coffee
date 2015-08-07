@@ -14,6 +14,7 @@ $.fn.S3Uploader = (options) ->
   $uploadForm = this
 
   settings =
+    dropZone: null
     path: ''
     additional_data: null
     before_add: null
@@ -76,6 +77,28 @@ $.fn.S3Uploader = (options) ->
               forms_for_submit = [data]
           else
             data.submit()
+
+      dropZone: settings.dropZone
+
+      dragover: (e) ->
+        if settings.dropZone
+          $dropzone = settings.dropZone
+          timeout = $dropzone.dropZoneTimeout
+
+          if (!timeout)
+            $dropzone.addClass('fileupload-in')
+          else
+            clearTimeout(timeout)
+
+          if (e.currentTarget == $dropzone[0])
+            $dropzone.addClass('fileupload-hover')
+          else
+            $dropzone.removeClass('fileupload-hover')
+
+          $dropzone.dropZoneTimeout = setTimeout () ->
+            $dropzone.dropZoneTimeout = null
+            $dropzone.removeClass('fileupload-in fileupload-hover')
+          , 200
 
       start: (e) ->
         $uploadForm.trigger("s3_uploads_start", [e])
