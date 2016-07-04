@@ -41,6 +41,7 @@ $.fn.S3Uploader = (options) ->
 
   $.extend settings, options
 
+  files_to_keys = {}
   current_files = []
   forms_for_submit = []
   if settings.click_submit_target
@@ -181,9 +182,9 @@ $.fn.S3Uploader = (options) ->
           key_field[0].value = settings.path + key
 
         # IE <= 9 doesn't have XHR2 hence it can't use formData
-        # replace 'key' field to submit form
+        # store the path in a hash to handle multiple files
         unless 'FormData' of window
-          $uploadForm.find("input[name='key']").val(settings.path + key)
+          files_to_keys[@files[0].unique_id] = settings.path + key
         data
 
   build_content_object = ($uploadForm, file, result) ->
@@ -193,11 +194,11 @@ $.fn.S3Uploader = (options) ->
       content.filepath       = $('<a />').attr('href', content.url)[0].pathname
     else # IE <= 9 retu      rn a null result object so we use the file object instead
       domain                 = $uploadForm.attr('action')
-      filepath               = $uploadForm.find('input[name=key]').val().replace('/${filename}', '')
-      content.url            = domain + filepath + '/' + encodeURIComponent(file.name)
-      parser                 = document.createElement('a')
-      parser.href            = content.url
-      content.filepath       = '/' + parser.pathname
+      key                    = files_to_keys[file.unique_id]
+      content.filepath       = "/" + key.replace("${filename}", encodeURIComponent(file.name))
+      content.url            = domain + content.filepath
+
+    delete files_to_keys[file.unique_id]
 
     content.filename         = file.name
     content.filesize         = file.size if 'size' of file
