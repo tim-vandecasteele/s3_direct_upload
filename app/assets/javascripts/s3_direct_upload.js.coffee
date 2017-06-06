@@ -172,6 +172,7 @@ $.fn.S3Uploader = (options) ->
         key = $uploadForm.data("key")
           .replace('{timestamp}', new Date().getTime())
           .replace('{unique_id}', @files[0].unique_id)
+          .replace('{cleaned_filename}', cleaned_filename(@files[0].name))
           .replace('{extension}', @files[0].name.split('.').pop())
 
         # substitute upload timestamp and unique_id into key
@@ -195,8 +196,9 @@ $.fn.S3Uploader = (options) ->
     else # IE <= 9 retu      rn a null result object so we use the file object instead
       domain                 = $uploadForm.attr('action')
       key                    = files_to_keys[file.unique_id]
-      content.filepath       = "/" + key.replace("${filename}", encodeURIComponent(file.name))
+      content.filepath       = "/" + key.replace("${filename}", encodeURIComponent(file.name)).replace("{cleaned_filename}", cleaned_filename(file.name))
       content.url            = domain + content.filepath
+      content.url            = content.url.replace('{cleaned_filename}', cleaned_filename(file.name))
 
     delete files_to_keys[file.unique_id]
 
@@ -208,6 +210,9 @@ $.fn.S3Uploader = (options) ->
     content.relativePath     = build_relativePath(file) if has_relativePath(file)
     content = $.extend content, settings.additional_data if settings.additional_data
     content
+
+  cleaned_filename = (filename) ->
+    filename.replace(/\s/g, '_').replace(/[^\w.-]/gi, '')
 
   has_relativePath = (file) ->
     file.relativePath || file.webkitRelativePath
